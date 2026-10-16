@@ -1,0 +1,28 @@
+[project]
+name = "newshub"
+version = "3.0.0"
+description = "资讯自动采集与简报推送：16 源 8 类采集器 · 定时邮件简报 · 本地仪表盘 · 内置 Agent"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "timele555" }]
+requires-python = ">=3.12"
+dependencies = [
+    "requests",
+    "feedparser",
+    "bottle",
+    "waitress",
+    "jinja2",
+    "pywebview",
+    "pywin32",
+]
+
+[project.urls]
+Homepage = "https://github.com/timele555/NewsHub"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["newshub3", "newshub3.collectors", "newshub3.push"]
+package-dir = { "" = "src" }

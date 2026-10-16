@@ -35,7 +35,7 @@ def create_channel(cfg, data_dir=None):
                         return SmtpChannel(s, timeout)
                 else:
                     if t == 'mock':
-                        pass
+                        return MockChannel(data_dir or 'data')
                     else:
                         raise PushError(f'未知推送通道: {t}（可选 wecom/serverchan/bark/smtp/mock）')
 __all__ = ['BaseChannel', 'PushError', 'create_channel']

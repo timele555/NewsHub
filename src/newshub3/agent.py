@@ -33,29 +33,29 @@ def _plan_rules(text):
     wants_disable = any((w in text for w in _DISABLE_WORDS))
     wants_status = any((w in text for w in _STATUS_WORDS))
     if url and (wants_add or wants_push or wants_collect):
-        pass
-    if wants_disable and (not url):
-        pass
+        domain = urlparse(url).netloc.replace('www.', '')
+        steps.append({'action': 'add_source', 'url': url, 'name': domain, '分类': _guess_category(domain), '备注': '🤖 Agent 添加'})
+    if wants_disable and not url:
+        steps.append({'action': 'disable', 'source_name': _best_source_name(text, None)})
     if not steps and wants_collect:
-            steps.append({'action': 'collect'})
+        steps.append({'action': 'collect'})
     if wants_push:
         if not steps or steps[0].get('action') != 'add_source':
             kws = _extract_keywords(text)
-            if kws and (not url):
-                pass
+            if kws and not url:
+                steps.append({'action': 'push_topic', 'keywords': kws[:5]})
             else:
                 steps.append({'action': 'push'})
         else:
             steps.append({'action': 'push'})
     if not steps and wants_status:
-            steps.append({'action': 'status'})
+        steps.append({'action': 'status'})
     if not steps:
         kws = _extract_keywords(text)
         if kws:
             steps.append({'action': 'push_topic', 'keywords': kws[:5]})
             return {'steps': steps}
-        else:
-            steps.append({'action': 'help'})
+        steps.append({'action': 'help'})
     return {'steps': steps}
 def _plan_llm(text, cfg):
     """LLM 模式：复用「文章API」的 OpenAI 兼容接口解析需求；失败返回 None。"""

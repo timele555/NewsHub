@@ -10,13 +10,23 @@
 - **Agent**：`订阅 <URL> 的 xx 内容，抓完推给我` / `把库里关于 xx 的内容报一版` 等中文指令
 - **自检**：`--doctor` 全量自检（配置/数据库/端口/网络/来源抽检/SMTP 握手），报告落盘 `data/logs/selfcheck.txt`
 
+## 下载使用（免安装）
+
+仓库根目录附带免安装单文件程序：
+
+- **`NewsHub.exe`**（约 13 MB）：双击即运行。首次运行自动从 `config.template.json` 初始化 `config.json`，数据落在同目录 `data/`
+- 命令行参数：`NewsHub.exe --doctor-quick`（自检）、`--collect`（采集一轮）、`--port 9000`（改端口）
+
+不想下载整包？源码运行见下节。
+
 ## 目录结构
 
 ```
 src/main.py            入口（argparse 调度）
 src/newshub3/          业务包（collectors 采集 / push 通道 / dashboard 仪表盘 / core 核心 / …）
 installer/installer.py 安装向导（tkinter，/S 静默 /U 卸载）
-config/                config.template.json 配置模板
+NewsHub.exe            免安装单文件程序（Windows x64）
+config.template.json   配置模板（exe 同目录自动初始化）
 docs/原版说明.txt        功能与命令行说明
 ```
 

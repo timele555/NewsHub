@@ -23,22 +23,23 @@ class ArticleProcessor:
         if category:
             user += f'分类：{category}\n'
         try:
-            data = r.json()
-        except ValueError:
-            return
+            r = requests.post(self.url, headers={'Authorization': 'Bearer ' + self.api_key, 'Content-Type': 'application/json'}, json={'model': self.model, 'temperature': 0.2, 'messages': [{'role': 'system', 'content': SYSTEM_PROMPT}, {'role': 'user', 'content': user}]}, timeout=self.timeout)
+            try:
+                data = r.json()
+            except ValueError:
+                log.warning('文章API 返回非 JSON: %s', str(r.text)[:120])
+                return None
+            try:
+                text = str(data['choices'][0]['message']['content']).strip().strip('"“”' + chr(39) + '「」『』 \u3000')
+            except (KeyError, IndexError, TypeError):
+                log.warning('文章API 响应结构异常: %s', str(data)[:120])
+                return None
+            if len(text) > 60:
+                text = text[:60]
+            return text or None
         except requests.RequestException as e:
             log.warning('文章API 请求失败: %s', str(e)[:120])
-            return
-        try:
-            pass
-        except (KeyError, IndexError, TypeError):
-            log.warning('文章API 响应结构异常: %s', str(data)[:150])
-            return
-        text = text.strip('“”\"\'「」『』 　')
-        if not text or len(text) > 60:
-            text = text[:60]
-        return text or None
-    pass
+            return None
 def enrich_items(processor, items, db=None, per_call_gap=0.3):
     """为条目补充一句话摘要（就地更新 item[\'summary\']）。\n\n    - 已有 processed_summary 缓存的直接复用（同一文章不重复计费）；\n    - 新调用成功则写回 DB 缓存（db.update_processed_summary）；\n    - 失败回退：保留抓取页原摘要；\n    - items 为 pipeline 产出的行 dict 列表。\n    """
     done = 0

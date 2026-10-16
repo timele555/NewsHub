@@ -169,14 +169,17 @@ def apply_settings(app, body):
     """设置中心保存：推送时刻/SMTP/板块/关键词/文章API（部分更新，写回 config）。"""
     import json
     path = app.cfg.path
+    with open(path, 'r', encoding='utf-8-sig') as f:
+        disk = json.load(f)
     push = disk.setdefault('推送', {})
     if '推送时刻' in body:
+        times = [str(t).strip() for t in body['推送时刻'] if str(t).strip()]
         if times:
             push['推送时刻'] = times
     if 'SMTP' in body:
         s = body['SMTP'] or {}
         sm = push.setdefault('SMTP', {})
-        for k in ['服务器', '账号', '收件人']:
+        for k in ('服务器', '账号', '收件人'):
             if str(s.get(k, '')).strip():
                 sm[k] = str(s[k]).strip()
         if str(s.get('授权码', '')).strip():
@@ -188,11 +191,20 @@ def apply_settings(app, body):
             pass
     if '板块' in body:
         boards = body['板块'] or []
+        registry_names = {r['name'] for r in SOURCE_REGISTRY}
+        custom = [s for s in disk.get('采集', {}).get('来源', []) if s.get('name') not in registry_names]
+        disk.setdefault('采集', {})['来源'] = build_sources_config(boards, custom)
     if '自定义关键词' in body:
-        pass
+        boards = body.get('板块') or sorted({s['分类'] for s in disk.get('采集', {}).get('来源', []) if s.get('enabled')})
+        kw = build_keywords(boards, body.get('自定义关键词') or [])
+        disk.setdefault('过滤', {})['关键词'] = kw
     if '文章API' in body:
         a = body['文章API'] or {}
+        disk['文章API'] = {'启用': bool(a.get('启用')), '接口地址': str(a.get('接口地址', '')).strip(), '密钥': str(a.get('密钥', '')).strip(), '模型': str(a.get('模型', '')).strip(), '超时秒': 30, '只处理每类前N条': max(1, min(20, int(a.get('只处理每类前N条', 5) or 5)))}
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(disk, f, ensure_ascii=False, indent=2)
     app.cfg.reload()
+    return {'ok': True, 'message': '已保存（约 30 秒内生效）'}
 def make_server(app):
     """本地服务（127.0.0.1）。首次未完成引导时 / 自动跳转 /setup。"""
     app.first_push_state = {'running': False, 'done': False, 'ok': None, 'msg': ''}

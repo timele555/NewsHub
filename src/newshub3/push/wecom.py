@@ -11,12 +11,13 @@ class WecomChannel(BaseChannel):
     def send(self, title, body):
         content = f'### {title}\n{body}'
         if len(content.encode('utf-8')) > 4096:
-            pass
+            content = content.encode('utf-8')[:4000].decode('utf-8', 'ignore') + '…'
         try:
+            r = requests.post(self.webhook, json={'msgtype': 'markdown', 'markdown': {'content': content}}, timeout=self.timeout)
             data = r.json()
         except ValueError:
-            pass
+            return (False, '响应非 JSON')
         except requests.RequestException as e:
-            pass
+            return (False, str(e)[:120])
         if data.get('errcode') == 0:
             return (True, '')

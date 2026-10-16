@@ -10,16 +10,21 @@ class Heartbeat(threading.Thread):
     def stop(self):
         self._stop.set()
     def run(self):
+        log.info('心跳调度启动（间隔 %ds，推送时刻 %s）', self.app.cfg.heartbeat_sec, [t.strftime('%H:%M') for t in self.app.cfg.push_times])
         while not self._stop.is_set():
+            step = min(5, self.app.cfg.heartbeat_sec)
             waited = 0.0
             interval = self.app.cfg.heartbeat_sec
+            while waited < interval:
+                if self._stop.wait(step):
+                    break
+                waited += step
             if self._stop.is_set():
                 return
-            else:
-                try:
-                    pass
-                except Exception:
-                    log.exception('心跳 tick 异常（不影响下一轮）')
+            try:
+                self.tick()
+            except Exception:
+                log.exception('心跳 tick 异常（不影响下一轮）')
     def tick(self):
         app = self.app
         err = app.cfg.reload()

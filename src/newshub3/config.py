@@ -102,20 +102,20 @@ class Config:
     def digest_total_limit(self):
         """单封简讯总条数上限（跨分类合计），0=不限制。"""
         try:
-            pass
+            return max(0, int(_get(self.push, '简讯总条数上限', 12)))
         except (TypeError, ValueError):
             return 12
     @property
     def wall_limit(self):
         """仪表盘标题墙每日精选条数（默认 30，建议 20-30）。"""
         try:
-            pass
+            return max(10, min(60, int(_get(self.raw.get('仪表盘', {}), '标题墙条数', 30))))
         except (TypeError, ValueError):
             return 30
     @property
     def send_timeout(self):
         try:
-            pass
+            return max(3, int(_get(self.push, '发送超时秒', 15)))
         except (TypeError, ValueError):
             return 15
     @property
@@ -136,7 +136,10 @@ class Config:
             return v
     @property
     def smtp(self):
-        d = self.push.get('SMTP', {}) or {}
+        d = self.push.get('SMTP') or {}
+        out = {k: str(d.get(k, '')).strip() for k in ('服务器', '账号', '授权码', '收件人')}
+        out['端口'] = int(d.get('端口', 465) or 465)
+        return out
     @property
     def filter_cfg(self):
         return self.raw.get('过滤', {})
@@ -156,19 +159,19 @@ class Config:
     @property
     def halflife_hours(self):
         try:
-            pass
+            return max(0.5, float(_get(self.raw.get('过滤', {}), '新鲜度半衰期_小时', 12)))
         except (TypeError, ValueError):
             return 12.0
     @property
     def keyword_boost(self):
         try:
-            pass
+            return float(_get(self.filter_cfg, '关键词加权系数', 0.4))
         except (TypeError, ValueError):
             return 0.4
     @property
     def miss_penalty(self):
         try:
-            pass
+            return float(_get(self.filter_cfg, '未命中惩罚系数', 0.4))
         except (TypeError, ValueError):
             return 0.4
     def source_weight(self, source_name):
@@ -193,19 +196,19 @@ class Config:
     @property
     def http_timeout(self):
         try:
-            pass
+            return max(3, int(_get(self.collect_cfg, '单源超时秒', 12)))
         except (TypeError, ValueError):
             return 12
     @property
     def retries(self):
         try:
-            pass
+            return max(0, int(_get(self.collect_cfg, '重试次数', 2)))
         except (TypeError, ValueError):
             return 2
     @property
     def retry_interval(self):
         try:
-            pass
+            return max(0, int(_get(self.collect_cfg, '重试间隔秒', 5)))
         except (TypeError, ValueError):
             return 5
     @property
@@ -213,43 +216,46 @@ class Config:
         """单源间隔≥3秒（限速约束）。显式填 0 仅建议测试环境使用。"""
         try:
             v = float(_get(self.collect_cfg, '单源间隔秒', 3))
+            if v == 0:
+                return 0
+            return max(3, v)
         except (TypeError, ValueError):
             return 3.0
     @property
     def per_source_limit(self):
         try:
-            pass
+            return max(1, int(_get(self.collect_cfg, '每源条数上限', 30)))
         except (TypeError, ValueError):
             return 30
     @property
     def summary_maxlen(self):
         try:
-            pass
+            return max(20, int(_get(self.collect_cfg, '摘要最大字数', 80)))
         except (TypeError, ValueError):
             return 80
     @property
     def heartbeat_sec(self):
         try:
-            pass
+            return max(1, int(_get(self.raw.get('调度', {}), '心跳间隔秒', 30)))
         except (TypeError, ValueError):
             return 30
     @property
     def bg_collect_hours(self):
         try:
-            pass
+            return max(0.5, float(_get(self.raw.get('调度', {}), '背景采集间隔小时', 3)))
         except (TypeError, ValueError):
             return 3.0
     @property
     def push_retry_limit(self):
         try:
-            pass
+            return max(1, int(_get(self.raw.get('调度', {}), '推送失败重试上限', 3)))
         except (TypeError, ValueError):
             return 3
     @property
     def net_retry_minutes(self):
         """无网络时握手重试间隔（分钟），恢复后自动补采集/补推。"""
         try:
-            pass
+            return max(1, int(_get(self.raw.get('调度', {}), '无网握手间隔分钟', 5)))
         except (TypeError, ValueError):
             return 5
     @property
@@ -263,26 +269,27 @@ class Config:
     @property
     def dashboard_port(self):
         try:
-            pass
+            return max(1024, int(_get(self.raw.get('仪表盘', {}), '端口', 8365)))
         except (TypeError, ValueError):
             return 8365
     @property
     def archive_days(self):
         """30 天滚动归档周期：过期条目/简讯瘦身仅留标题+链接（不清除）。"""
         v = self.raw.get('仪表盘', {})
-        for key in ['归档天数', '条目保留天数']:
+        for key in ('归档天数', '条目保留天数'):
             try:
                 if v.get(key) is not None:
-                    pass
+                    return max(1, int(v[key]))
             except (TypeError, ValueError):
-                pass
+                continue
         return 30
     @property
     def auto_open_browser(self):
         """启动常驻时自动打开浏览器进仪表盘（默认关，桌面窗口模式无需此项）。"""
+        return bool(_get(self.raw.get('仪表盘', {}), '自动打开浏览器', False))
     @property
     def ui_mode(self):
-        """常驻界面形态: window=桌面阅读窗口(默认) / browser=浏览器。"""
+        m = str(_get(self.raw.get('仪表盘', {}), '界面', 'window')).lower()
         return m if m in ('window', 'browser') else 'window'
     @property
     def article_api(self):
@@ -295,27 +302,22 @@ class Config:
     @property
     def article_api_limit(self):
         try:
-            pass
+            return max(1, min(20, int(self.article_api.get('只处理每类前N条', 5))))
         except (TypeError, ValueError):
             return 5
     def today_push_datetimes(self, day):
         """给定日期（datetime.date）→ 当天各推送时刻的 datetime 列表。"""
     def channel_ready(self):
-        """当前通道凭证是否已填写（mock 恒为就绪）。"""
         t = self.channel_type
         if t == 'mock':
             return True
-        else:
-            if t == 'wecom':
-                return bool(self.webhook)
-            else:
-                if t == 'serverchan':
-                    return bool(self.serverchan_key)
-                else:
-                    if t == 'bark':
-                        return bool(self.bark_url)
-                    else:
-                        if t == 'smtp':
-                            s = self.smtp
-                        else:
-                            return False
+        if t == 'wecom':
+            return bool(self.webhook)
+        if t == 'serverchan':
+            return bool(self.serverchan_key)
+        if t == 'bark':
+            return bool(self.bark_url)
+        if t == 'smtp':
+            s = self.smtp
+            return all([s['服务器'], s['账号'], s['授权码'], s['收件人']])
+        return False
