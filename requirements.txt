@@ -1,0 +1,7 @@
+requests
+feedparser
+bottle
+waitress
+jinja2
+pywebview
+pywin32

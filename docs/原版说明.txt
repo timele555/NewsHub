@@ -1,0 +1,27 @@
+NewsHub —— 资讯自动采集与简报推送
+================================================
+
+【安装版】双击 NewsHub-Setup.exe：
+  · 向导安装（默认到 %LocalAppData%\Programs\NewsHub，可换目标盘/新建文件夹）
+  · 静默安装：NewsHub-Setup.exe /S "D:\NewsHub"
+  · 卸载：安装目录内 UNINSTALL.exe
+
+【便携版】解压本 zip 到任意目录，双击 NewsHub.exe 即用：
+  · 目录可整体移动/复制到其他电脑，首次运行自动自愈注册（自启+快捷方式）
+  · 想注册自启/快捷方式：进入应用 → 自检页 → 「修复本地注册」
+
+【自检通道】
+  · 应用内：导航栏「自检」页（快速自检 / 完整自检 / 一键修复注册 / SMTP 握手）
+  · 命令行：NewsHub.exe --doctor          完整自检（无控制台窗口，摘要弹窗+报告落盘）
+            NewsHub.exe --doctor-quick    离线快速自检
+            NewsHub.exe --doctor --fix    自检并修复本地注册
+            NewsHub.exe --doctor --smtp   自检附带 SMTP 登录握手
+  · 报告自动落盘 data/logs/selfcheck.txt
+  · 程序为窗口模式运行（双击/自启不出现任何控制台黑框）
+
+【数据与隐私】所有配置与数据（config.json、data/）都在安装目录内，不出本机；
+  升级/重装不会覆盖已有 config.json；卸载只删安装目录。
+  分发给他人的安装包请先删除包内 config.user.json（若存在，含个人凭证）。
+
+【主要功能】16 个内置信息源 8 类采集器 · 定时简报推送 QQ 邮箱 · 首页拖拽文件直发
+  · Agent 工作台（自然语言订阅/抓取/推送）· 标题墙/日历/简讯存档 · 30 天滚动归档
