@@ -49,14 +49,15 @@ def enrich_items(processor, items, db=None, per_call_gap=0.3):
             it['summary'] = cached
             continue
         else:
+            text = processor.summarize(it.get('title', ''), it.get('summary') or '', it.get('category', ''))
             if text:
                 it['summary'] = text
                 done += 1
                 if db is not None and it.get('id'):
-                        try:
-                            db.update_processed_summary(it['id'], text)
-                        except Exception:
-                            log.debug('写回摘要缓存失败', exc_info=True)
+                    try:
+                        db.update_processed_summary(it['id'], text)
+                    except Exception:
+                        log.debug('写回摘要缓存失败', exc_info=True)
             time.sleep(per_call_gap)
     if done:
         log.info('文章API 处理 %d 条', done)

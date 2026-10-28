@@ -13,3 +13,4 @@ class BaseChannel:
             ok, err = self.send(title, body)
             if not ok:
                 errs.append(f'{title}: {err}')
+        return (not errs, errs[0] if errs else '')

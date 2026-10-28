@@ -14,9 +14,20 @@ _DISABLE_WORDS = ('停用', '禁用', '不要', '删除', '移除', '取消订�
 _STATUS_WORDS = ('状态', '健康', '怎么样', '情况', '汇报', '诊断')
 CATEGORY_HINTS = [('机器人', '机器人产业'), ('具身', 'AI·具身智能'), ('AI', 'AI·具身智能'), ('人工智能', 'AI·具身智能'), ('大模型', 'AI·具身智能'), ('智能驾驶', '智能驾驶'), ('自动驾驶', '智能驾驶'), ('智驾', '智能驾驶'), ('汽车', '智能驾驶'), ('车', '智能驾驶'), ('控制', '控制学科'), ('财经', '财经科技'), ('金融', '财经科技'), ('数码', '数码生活'), ('效率', '数码生活')]
 LLM_SYSTEM_PROMPT = '你是 NewsHub 资讯聚合器的任务解析器。把用户的中文需求解析为一个 JSON 对象，只输出 JSON 本身。\n可用动作：\n- \"status\"：汇报来源健康\n- \"add_source\"：订阅新站点（字段 url 必填，name 可选默认域名，分类 可选）\n- \"collect\"：采集一轮全部来源\n- \"push\"：采集并把当前窗口简讯推送到绑定邮箱\n- \"push_topic\"：按 keywords 在本地库筛选近48小时条目，即时报送专题简讯（字段 keywords: [词]）\n- \"disable\"：停用来源（字段 source_name）\n- \"help\"：用法说明\n规则：\n1. 一次需求可链式多步时，输出 steps 数组按执行顺序排列，例如\"订阅 xxx 并推给我\" → steps=[{\"action\":\"add_source\",...},{\"action\":\"push\"}]。\n2. 无需多步时 steps 只含一项。只输出 {\"steps\":[...]}，不要任何解释文字。'
+_NOISE_WORDS = ('把', '关于', '的', '内容', '一版', '库里', '给我', '我', '一下', '现在', '立即', '相关', '全部', '所有', '报', '来', '帮', '请', '近48小时', '今天', '推送', '发送')
 def _extract_keywords(text):
     """去掉动词/助词后剩余的实质词（用于 push_topic）。"""
-    words = re.split('[\\s，。、,.！!？?；;：:]+', text)
+    t = text
+    for v in _PUSH_WORDS + _ADD_WORDS + _COLLECT_WORDS + _DISABLE_WORDS + _STATUS_WORDS + _NOISE_WORDS:
+        t = t.replace(v, ' ')
+    words = re.split('[\\s，。、,.！!？?；;：:]+', t)
+    out = []
+    for w in words:
+        w = w.strip()
+        if len(w) < 2 or w.startswith('http') or w in out:
+            continue
+        out.append(w)
+    return out
 def _guess_category(text):
     for hint, cat in CATEGORY_HINTS:
         if hint in text:

@@ -25,10 +25,23 @@
 src/main.py            入口（argparse 调度）
 src/newshub3/          业务包（collectors 采集 / push 通道 / dashboard 仪表盘 / core 核心 / …）
 installer/installer.py 安装向导（tkinter，/S 静默 /U 卸载）
+build_release.py       一键构建（免安装版 + 安装器，含 ICO 图标）
+assets/NewsHub.ico     应用图标（16–256 多尺寸）
+tests_boundary.py      边界回归测试（48 项，离线可跑）
 NewsHub.exe            免安装单文件程序（Windows x64）
 config.template.json   配置模板（exe 同目录自动初始化）
 docs/原版说明.txt        功能与命令行说明
 ```
+
+## 从源码构建完整安装包
+
+```bash
+pip install -r requirements.txt pyinstaller
+python build_release.py        # 产出 dist/NewsHub.exe（免安装）+ dist/NewsHub-Setup.exe（完整安装器）
+python tests_boundary.py       # 48 项边界回归测试，应全部通过
+```
+
+安装器自带应用图标（安装后桌面/开始菜单快捷方式与自启注册均指向 `NewsHub.ico`）、新手引导（可跳过）与装后自检。
 
 ## 快速开始
 

@@ -74,9 +74,9 @@ def entries_json(sections):
     out = []
     for cat, sec in sections.items():
         for it in sec.get('items', []):
-            pass
+            out.append({'category': cat, 'title': it.get('title', ''), 'summary': it.get('summary') or '', 'url': it.get('url', ''), 'is_notice': False})
         for src in sec.get('notice_sources', []):
-            pass
+            out.append({'category': cat, 'title': src, 'summary': '', 'url': '', 'is_notice': True})
     return json.dumps(out, ensure_ascii=False)
 def render_entries_html(entries, stale_line=''):
     import html as h

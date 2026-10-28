@@ -8,16 +8,21 @@ class BarkChannel(BaseChannel):
     name = 'bark'
     def __init__(self, bark_url, timeout=15):
         u = urlparse(bark_url.strip().rstrip('/'))
+        self.origin = f'{u.scheme}://{u.netloc}'
+        path = u.path.strip('/')
+        self.device_key = path.split('/')[0] if path else ''
         self.timeout = timeout
     def send(self, title, body):
         if not self.device_key:
             return (False, 'Bark URL 中未解析到 device_key')
         else:
             try:
+                r = requests.post(self.origin + '/push', json={'device_key': self.device_key, 'title': str(title)[:60], 'body': body}, timeout=self.timeout)
                 data = r.json()
             except ValueError:
-                pass
+                return (False, '响应非 JSON')
             except requests.RequestException as e:
-                pass
+                return (False, str(e)[:120])
             if data.get('code') == 200:
                 return (True, '')
+            return (False, f"code={data.get('code')} {str(data.get('message', ''))[:100]}")

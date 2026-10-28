@@ -21,3 +21,4 @@ class WecomChannel(BaseChannel):
             return (False, str(e)[:120])
         if data.get('errcode') == 0:
             return (True, '')
+        return (False, f"errcode={data.get('errcode')} {str(data.get('errmsg', ''))[:100]}")

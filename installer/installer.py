@@ -121,13 +121,15 @@ def register(target):
     exe = os.path.join(target, EXE_NAME)
     if not os.path.isfile(exe):
         raise RuntimeError(f'安装不完整：缺少 {exe}')
+    ico = os.path.join(target, f'{APP_NAME}.ico')
+    icon_ref = f'{ico},0' if os.path.isfile(ico) else f'{exe},0'
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
         winreg.SetValueEx(k, RUN_NAME, 0, winreg.REG_SZ, f'"{exe}"')
     home = os.path.expanduser('~')
     lnks = [os.path.join(home, 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', f'{APP_NAME}.lnk'), os.path.join(home, 'Desktop', f'{APP_NAME}.lnk')]
-    ps = ';'.join((f"$lk=$ws.CreateShortcut('{p}');$lk.TargetPath='{exe}';$lk.WorkingDirectory='{target}';$lk.IconLocation='{exe},0';$lk.Save()" for p in lnks))
+    ps = ';'.join((f"$lk=$ws.CreateShortcut('{p}');$lk.TargetPath='{exe}';$lk.WorkingDirectory='{target}';$lk.IconLocation='{icon_ref}';$lk.Save()" for p in lnks))
     subprocess.run(['powershell', '-NoProfile', '-Command', f'$ws = New-Object -ComObject WScript.Shell;{ps}'], capture_output=True, timeout=60, creationflags=134217728)
-    _log('[register] 自启 + 开始菜单/桌面快捷方式')
+    _log(f'[register] 自启 + 快捷方式（图标 {icon_ref}）')
     return exe
 def unregister():
     try:
