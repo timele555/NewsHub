@@ -6,3 +6,8 @@ data/
 build/
 dist/
 *.spec
+
+/dist/
+/installer_build/
+/build/
+__pycache__/

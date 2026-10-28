@@ -3,13 +3,19 @@ SOURCE_REGISTRY = [{'name': 'arXiv 控制理论', 'board': '控制学科', 'type
 BOARD_PRESETS = [{'name': '控制学科', 'icon': '🎛️', 'desc': 'ADP · LQR · PID · FLC · SMC · BSC · MPC · 滑模 · 反步 · VLA · 世界模型', '关键词': ['ADP', 'LQR', 'PID', 'FLC', 'SMC', 'BSC', 'MPC', '滑模', '反步', '自适应动态规划', '模糊控制', '预测控制', '强化学习', 'VLA', '世界模型']}, {'name': 'AI·具身智能', 'icon': '🤖', 'desc': '大模型 · 具身智能 · 机器人 · Agent · 芯片', '关键词': ['具身智能', '机器人', '大模型', 'Agent', '芯片', '智元', '宇树']}, {'name': '机器人产业', 'icon': '🏭', 'desc': '人形机器人 · 执行器 · 产业动态', '关键词': ['机器人', '人形机器人', '执行器', '关节', '减速器']}, {'name': '智能驾驶', 'icon': '🚗', 'desc': '智驾 · 自动驾驶 · 智能汽车', '关键词': ['智驾', '自动驾驶', '智能汽车', '辅助驾驶']}, {'name': '财经科技', 'icon': '📈', 'desc': '宏观 · 市场 · 融资财报（默认降量）', '关键词': ['融资', '财报', 'IPO', '宏观']}, {'name': '数码生活', 'icon': '🧩', 'desc': '效率工具 · 数码 · 应用', '关键词': ['效率工具', '数码', 'App', '开源']}]
 def board_names(preset_names=None):
     """已选板块名列表（缺省=全部预设）。"""
+    names = [b['name'] for b in BOARD_PRESETS]
     if preset_names is None:
         return names
+    sel = set(preset_names)
+    return [n for n in names if n in sel]
 def build_sources_config(selected_boards, custom_sources=None):
     """根据勾选的板块生成 config.采集.来源 列表。\n\n    - 选中板块 → 该板块全部来源 enabled=true；\n    - 未选中板块 → 来源保留但 enabled=false（随时可在设置页重新勾选）；\n    - custom_rss 预留位（无 url）恒为 disabled；\n    - custom_sources 允许用户在设置页添加自定义来源（dict 列表，原样并入）。\n    """
     selected = set(selected_boards or [])
     out = []
     for s in SOURCE_REGISTRY:
+        entry = {'name': s['name'], '分类': s['board'], 'type': s['type'], 'url': s.get('url', ''), 'enabled': s['board'] in selected and bool(s.get('url')), '备注': s.get('备注', '')}
+        if s.get('weight') is not None:
+            entry['权重'] = s['weight']
         out.append(entry)
     for extra in custom_sources or []:
         e = dict(extra)

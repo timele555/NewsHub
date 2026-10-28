@@ -31,7 +31,10 @@ class Config:
         try:
             m = os.path.getmtime(self.path)
         except OSError:
-                return
+            return None
+        if not force and m == self._mtime:
+            return None
+        return self._read(raise_on_error=False, mtime=m)
     def _read(self, raise_on_error, mtime=None):
         try:
             with open(self.path, 'r', encoding='utf-8-sig') as f:
@@ -46,6 +49,13 @@ class Config:
             else:
                 return err
         self._cfg = cfg
+        if mtime is not None:
+            self._mtime = mtime
+        elif not self._mtime:
+            try:
+                self._mtime = os.path.getmtime(self.path)
+            except OSError:
+                pass
     @property
     def raw(self):
         with self._lock:
@@ -138,7 +148,10 @@ class Config:
     def smtp(self):
         d = self.push.get('SMTP') or {}
         out = {k: str(d.get(k, '')).strip() for k in ('服务器', '账号', '授权码', '收件人')}
-        out['端口'] = int(d.get('端口', 465) or 465)
+        try:
+            out['端口'] = int(d.get('端口', 465) or 465)
+        except (TypeError, ValueError):
+            out['端口'] = 465
         return out
     @property
     def filter_cfg(self):
@@ -189,7 +202,8 @@ class Config:
         """返回启用中的来源列表（dict 原样，仅过滤 enabled）。"""
         out = []
         for s in _get(self.collect_cfg, '来源', []):
-                            out.append(s)
+            if isinstance(s, dict) and s.get('enabled', True):
+                out.append(s)
         return out
     def all_sources(self):
         return [s for s in _get(self.collect_cfg, '来源', []) if isinstance(s, dict)]
@@ -299,6 +313,7 @@ class Config:
         a = self.article_api
         if not bool(a.get('启用', False)):
             return False
+        return bool(str(a.get('接口地址', '')).strip() and str(a.get('密钥', '')).strip())
     @property
     def article_api_limit(self):
         try:
@@ -307,6 +322,7 @@ class Config:
             return 5
     def today_push_datetimes(self, day):
         """给定日期（datetime.date）→ 当天各推送时刻的 datetime 列表。"""
+        return [datetime.combine(day, t) for t in self.push_times]
     def channel_ready(self):
         t = self.channel_type
         if t == 'mock':

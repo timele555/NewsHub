@@ -96,7 +96,10 @@ def main():
             _alert(f'[NewsHub] 启动失败：{e}\n请检查 NewsHub 目录下的 config.json 是否存在且为合法 JSON。')
             sys.exit(1)
     if args.doctor or args.doctor_quick:
-        from newshub3.selfcheck import doctor, repair_registration
+        if __package__ in (None, ''):
+            from newshub3.selfcheck import doctor, repair_registration
+        else:
+            from .selfcheck import doctor, repair_registration
         if args.fix:
             ok_reg, lines = repair_registration()
             _say('== 本地注册修复 ==')

@@ -1,6 +1,6 @@
 [project]
 name = "newshub"
-version = "3.0.0"
+version = "4.0.1"
 description = "资讯自动采集与简报推送：16 源 8 类采集器 · 定时邮件简报 · 本地仪表盘 · 内置 Agent"
 readme = "README.md"
 license = { file = "LICENSE" }

@@ -10,8 +10,12 @@ class ServerChanChannel(BaseChannel):
         self.timeout = timeout
     def send(self, title, body):
         try:
+            r = requests.post('https://sctapi.ftqq.com/' + self.key + '.send', data={'title': str(title)[:32], 'desp': body}, timeout=self.timeout)
             data = r.json()
         except ValueError:
-            pass
+            return (False, '响应非 JSON')
+        except requests.RequestException as e:
+            return (False, str(e)[:120])
         if data.get('code') == 0:
             return (True, '')
+        return (False, f"code={data.get('code')} {str(data.get('message', ''))[:100]}")

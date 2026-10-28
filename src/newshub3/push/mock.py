@@ -13,4 +13,6 @@ class MockChannel(BaseChannel):
     def send(self, title, body):
         with self._lock:
             with open(self.out, 'a', encoding='utf-8') as f:
-                pass
+                f.write(f'\n===== {title} =====\n{body}\n')
+        log.info('mock 通道已写入 %s', self.out)
+        return (True, '')

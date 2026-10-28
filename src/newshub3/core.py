@@ -63,6 +63,22 @@ def apply_onboarding(config_path, payload):
         return (True, '')
     except Exception as e:
         return (False, f'{type(e).__name__}: {e}')
+def apply_skip(config_path):
+    """跳过引导：标记引导完成；来源为空时启用全部预设板块（邮箱可稍后在设置页绑定，未绑定时简讯只存档不发送）。"""
+    import json
+    from .boards import build_sources_config, board_names
+    try:
+        with open(config_path, 'r', encoding='utf-8-sig') as f:
+            cfg = json.load(f)
+        srcs = cfg.setdefault('采集', {}).get('来源') or []
+        if not any(isinstance(s, dict) and s.get('enabled') for s in srcs):
+            cfg['采集']['来源'] = build_sources_config(board_names())
+        cfg['引导完成'] = True
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+        return (True, '')
+    except Exception as e:
+        return (False, f'{type(e).__name__}: {e}')
 class NewsHubApp:
     def __init__(self, config_path, data_dir):
         self.cfg = Config(config_path)
